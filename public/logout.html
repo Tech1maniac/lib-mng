@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Logging Out...</title>
+  <link rel="stylesheet" href="style.css" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+</head>
+<body class="d-flex justify-content-center align-items-center vh-100 bg-dark text-white">
+  <div class="text-center">
+    <h2>Logging you out...</h2>
+    <p>Please wait a moment.</p>
+  </div>
+
+  <script>
+    // Clear token from localStorage
+    localStorage.removeItem("token");
+
+    // You can also clear other data if needed
+    // localStorage.removeItem("role");
+
+    // Redirect to login page after 1 second
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 1000);
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

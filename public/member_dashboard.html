@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Member Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      header {
+        background-color: #0073e6;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+      }
+      .container {
+        padding: 20px;
+      }
+      .card {
+        background: white;
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .card h3 {
+        margin: 0;
+      }
+      .btn {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 10px 15px;
+        background-color: #0073e6;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      .btn:hover {
+        background-color: #005bb5;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Library Member Dashboard</h1>
+    </header>
+    <div class="container">
+      <div class="card">
+        <h3>Borrowed Books</h3>
+        <ul id="borrowedBooksList"></ul>
+      </div>
+      <div class="card">
+        <h3>Available Actions</h3>
+        <a href="#" class="btn" onclick="viewProfile()">View Profile</a>
+        <a href="#" class="btn" onclick="searchBooks()">Search Books</a>
+        <a href="#" class="btn" onclick="logout()">Logout</a>
+      </div>
+    </div>
+
+    <script>
+      // Sample data for borrowed books
+      const borrowedBooks = [
+        { title: "The Great Gatsby", dueDate: "2023-10-15" },
+        { title: "1984", dueDate: "2023-10-20" },
+        { title: "To Kill a Mockingbird", dueDate: "2023-10-25" },
+      ];
+
+      // Populate borrowed books list
+      const borrowedBooksList = document.getElementById("borrowedBooksList");
+      borrowedBooks.forEach((book) => {
+        const li = document.createElement("li");
+        li.textContent = `${book.title} - Due: ${book.dueDate}`;
+        borrowedBooksList.appendChild(li);
+      });
+
+      // Action functions
+      function viewProfile() {
+        alert("Redirecting to profile page...");
+      }
+
+      function searchBooks() {
+        alert("Redirecting to book search page...");
+      }
+
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          window.location.href = "/login";
+        }
+      }
+    </script>
+  </body>
+</html>
