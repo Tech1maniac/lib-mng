@@ -110,13 +110,14 @@
         const otp = document.getElementById("otp").value;
 
         try {
-          const res = await fetch("/verifyOTP", {
+          const res = await fetch("/verify-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, otp, remember }),
           });
 
           const result = await res.json();
+          console.log(result); // ← Added this line
 
           showToast(result.message);
           if (result.success) {
@@ -126,9 +127,8 @@
             setTimeout(() => (window.location.href = "/login"), 2000);
           }
         } catch (error) {
-          showToast(`Error: ${error.message}`, () => {
-            window.location.href = "/login";
-          });
+          showToast(`Error: ${error.message}`);
+          setTimeout(() => (window.location.href = "/login"), 2000);
         }
       });
     </script>
