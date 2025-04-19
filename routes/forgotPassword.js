@@ -9,11 +9,13 @@ const PORT = process.env.PORT || 3000;
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   const token = crypto.randomBytes(20).toString("hex");
+  let connection;
 
   try {
-    const connection = await oracledb.getConnection();
+    connection = await oracledb.getConnection();
 
-    const userQuery = `SELECT id FROM USERS WHERE email = :email`;
+    // 1) Fetch the user_id (not “id”) from USERS
+    const userQuery = `SELECT user_id FROM USERS WHERE email = :email`;
     const userResult = await connection.execute(
       userQuery,
       { email },
@@ -26,16 +28,25 @@ router.post("/forgot-password", async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    const updateToken = `
-      UPDATE USERS
-      SET reset_token = :token, reset_token_expiry = SYSTIMESTAMP + (10/1440)
-      WHERE email = :email
-    `;
-    await connection.execute(updateToken, { token, email });
-    await connection.commit();
+    const userId = userResult.rows[0].USER_ID;
 
+    // 2) Update reset_token and reset_token_expiry for that user_id
+    const updateTokenSql = `
+      UPDATE USERS
+      SET reset_token = :token,
+          reset_token_expiry = SYSTIMESTAMP + INTERVAL '10' MINUTE
+      WHERE user_id = :userId
+    `;
+    await connection.execute(
+      updateTokenSql,
+      { token, userId },
+      { autoCommit: true }
+    );
+
+    // 3) Construct the reset link
     const resetLink = `http://localhost:${PORT}/reset-password/${token}`;
 
+    // 4) Send the email
     const mailOptions = {
       to: email,
       from: process.env.EMAIL_USER,
@@ -80,12 +91,18 @@ router.post("/forgot-password", async (req, res) => {
     });
   } catch (err) {
     console.error("Error in /forgot-password route:", err);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "An error occurred during the process.",
-      });
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during the process.",
+    });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (closeErr) {
+        console.error("Error closing connection:", closeErr);
+      }
+    }
   }
 });
 

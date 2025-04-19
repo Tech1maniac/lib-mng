@@ -4,16 +4,18 @@ const { oracledb } = require("../config/db");
 const bcrypt = require("bcrypt");
 const path = require("path");
 
-// Validate token and serve JSON status
+// Validate token and serve reset form
 router.get("/reset-password/:token", async (req, res) => {
   const { token } = req.params;
-  try {
-    const connection = await oracledb.getConnection();
+  let connection;
 
+  try {
+    connection = await oracledb.getConnection();
     const tokenQuery = `
-      SELECT id FROM USERS 
-      WHERE reset_token = :token 
-      AND reset_token_expiry > SYSTIMESTAMP
+      SELECT user_id
+      FROM USERS
+      WHERE reset_token = :token
+        AND reset_token_expiry > SYSTIMESTAMP
     `;
     const tokenResult = await connection.execute(
       tokenQuery,
@@ -22,19 +24,25 @@ router.get("/reset-password/:token", async (req, res) => {
     );
 
     if (tokenResult.rows.length === 0) {
-      return res.status(400).json({ success: false, message: "Token is invalid or has expired." });
+      return res.status(400).json({
+        success: false,
+        message: "Token is invalid or has expired."
+      });
     }
 
-    return res.sendFile(path.join(__dirname, "../public/reset_pass.html"));
-
-
+    // Serve the password reset HTML form
+    res.sendFile(path.join(__dirname, "../public/reset_pass.html"));
   } catch (err) {
     console.error("Error in GET /reset-password:", err);
     res.status(500).json({ success: false, message: "Internal server error." });
+  } finally {
+    if (connection) {
+      try { await connection.close(); } catch (e) { console.error("Error closing connection:", e); }
+    }
   }
 });
 
-// Handle password reset with JSON response
+// Handle form submission and reset password
 router.post("/reset-password/:token", async (req, res) => {
   const { token } = req.params;
   const { newPassword, cnfPass } = req.body;
@@ -46,11 +54,11 @@ router.post("/reset-password/:token", async (req, res) => {
   let connection;
   try {
     connection = await oracledb.getConnection();
-
     const userQuery = `
-      SELECT id FROM USERS 
-      WHERE reset_token = :token 
-      AND reset_token_expiry > SYSTIMESTAMP
+      SELECT user_id
+      FROM USERS
+      WHERE reset_token = :token
+        AND reset_token_expiry > SYSTIMESTAMP
     `;
     const userResult = await connection.execute(
       userQuery,
@@ -59,32 +67,35 @@ router.post("/reset-password/:token", async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(400).json({ success: false, message: "Token is invalid or has expired." });
+      return res.status(400).json({
+        success: false,
+        message: "Token is invalid or has expired."
+      });
     }
 
-    const userId = userResult.rows[0].ID;
+    const userId = userResult.rows[0].USER_ID;
     const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
 
-    const updatePassword = `
+    const updatePasswordSql = `
       UPDATE USERS
-      SET password = :password, reset_token = NULL, reset_token_expiry = NULL
-      WHERE id = :userId
+      SET password = :password,
+          reset_token = NULL,
+          reset_token_expiry = NULL
+      WHERE user_id = :userId
     `;
-    await connection.execute(updatePassword, { password: hashedPassword, userId });
-    await connection.commit();
+    await connection.execute(
+      updatePasswordSql,
+      { password: hashedPassword, userId },
+      { autoCommit: true }
+    );
 
-    return res.status(200).json({ success: true, message: "Password reset successfully." });
-
+    res.status(200).json({ success: true, message: "Password reset successfully." });
   } catch (error) {
     console.error("Error in POST /reset-password:", error);
-    return res.status(500).json({ success: false, message: "Internal server error." });
+    res.status(500).json({ success: false, message: "Internal server error." });
   } finally {
     if (connection) {
-      try {
-        await connection.close();
-      } catch (closeError) {
-        console.error("Error closing connection", closeError);
-      }
+      try { await connection.close(); } catch (e) { console.error("Error closing connection:", e); }
     }
   }
 });
