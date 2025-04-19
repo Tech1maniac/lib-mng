@@ -20,8 +20,8 @@ create table email_verifications (
          on delete cascade
 );
 
-INSERT INTO USERS (email, password, role)
-VALUES ('rroy23133@gmail.com', '$2b$10$YiXyEC6ShYt03d4/tqb.jejiYEjYKtLIW/cozjmXMYUOzVd6.FDRa', 'admin');
+INSERT INTO USERS (name,email, password, role)
+VALUES ('Rahul','rroy23133@gmail.com', '$2b$10$YiXyEC6ShYt03d4/tqb.jejiYEjYKtLIW/cozjmXMYUOzVd6.FDRa', 'admin');
 
 -- Cleanup commands
 truncate table email_verifications;
@@ -31,5 +31,11 @@ drop table email_verifications;
 drop table users;
 
 commit;
+
+
+
+-- Add a new attribute 'name' to the users table
+ALTER TABLE USERS ADD name VARCHAR2(100);
+
 
 

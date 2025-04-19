@@ -9,67 +9,76 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <!-- <style>
-      body {
-        background-color: #f8f9fa;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-      }
+    <style>
       .wrapper {
-        background-color: #343a40;
-        padding: 40px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        width: 100%;
         max-width: 400px;
+        margin: 50px auto;
+        padding: 30px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 10px;
+        color: white;
       }
-      h2 {
-        margin-bottom: 20px;
-        text-align: center;
-      }
+
       .input-field {
-        margin-bottom: 20px;
+        position: relative;
+        margin-bottom: 1.2rem;
       }
-      .input-field input {
+
+      input {
         width: 100%;
         padding: 10px;
+        background: #333;
+        border: none;
         border-radius: 5px;
-        border: 1px solid #ced4da;
+        color: white;
       }
-      .input-field label {
-        display: block;
-        margin-top: 5px;
-        font-size: 0.9rem;
-        color: #adb5bd;
+
+      label {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        font-size: 0.85rem;
+        color: #aaa;
+        pointer-events: none;
+        transition: 0.2s;
       }
+
+      .input-field input:focus + label,
+      .input-field input:not(:placeholder-shown) + label {
+        top: -12px;
+        font-size: 0.75rem;
+        color: #f0f0f0;
+        background-color: #000;
+        padding: 0 4px;
+      }
+
       button {
         width: 100%;
         padding: 10px;
+        background: #0d6efd;
         border: none;
         border-radius: 5px;
-        background-color: #007bff;
         color: white;
-        font-size: 1rem;
+        font-weight: bold;
       }
-      button:hover {
-        background-color: #0056b3;
-      }
-    </style> -->
+    </style>
   </head>
+
   <body>
     <div class="wrapper">
+      <!-- Countdown Timer -->
+      <div id="timer" class="text-center mb-3 fs-5 text-warning">05:00</div>
+
       <form id="otpForm">
-        <h2 class="text-white">Enter OTP</h2>
+        <h2 class="text-white text-center mb-4">Enter OTP</h2>
         <div class="input-field">
-          <input type="text" id="otp" name="otp" required />
+          <input type="text" id="otp" name="otp" required placeholder=" " />
           <label for="otp">Enter the OTP sent to your email</label>
         </div>
         <button type="submit">Verify OTP</button>
       </form>
     </div>
+
     <!-- Toast -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
       <div
@@ -91,9 +100,8 @@
       </div>
     </div>
 
-    <!-- Toast logic + OTP form logic -->
+    <!-- JavaScript -->
     <script>
-      // Show toast
       function showToast(message) {
         document.getElementById("toastMsg").textContent = message;
         new bootstrap.Toast(document.getElementById("toast")).show();
@@ -117,23 +125,39 @@
           });
 
           const result = await res.json();
-          console.log(result); // ← Added this line
-
           showToast(result.message);
+
           if (result.success) {
             localStorage.setItem("token", result.token);
             setTimeout(() => (window.location.href = result.redirectUrl), 2000);
           } else {
-            setTimeout(() => (window.location.href = "/login"), 2000);
+            // setTimeout(() => (window.location.href = "/login"), 2000);
           }
         } catch (error) {
           showToast(`Error: ${error.message}`);
-          setTimeout(() => (window.location.href = "/login"), 2000);
+          // setTimeout(() => (window.location.href = "/login"), 2000);
         }
       });
+
+      // Countdown timer logic
+      let timeLeft = 5 * 60; // 5 minutes in seconds
+      const timerDisplay = document.getElementById("timer");
+
+      const countdown = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          showToast("OTP expired. Redirecting...");
+          setTimeout(() => (window.location.href = "/login"), 2000);
+        }
+
+        timeLeft--;
+      }, 1000);
     </script>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
