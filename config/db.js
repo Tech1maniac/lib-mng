@@ -20,4 +20,8 @@ const initPool = async () => {
   }
 };
 
-module.exports = { oracledb, initPool };
+function getConnection() {
+  return pool.getConnection();
+}
+
+module.exports = { oracledb, initPool,getConnection };

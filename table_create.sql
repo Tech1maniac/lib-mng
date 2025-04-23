@@ -167,6 +167,16 @@ truncate table users;
 drop table email_verifications;
 drop table users;
 
+INSERT INTO publishers (name, address, contact)
+VALUES (
+  'Mock Publisher Co.',
+  '123 Library Lane, Booktown',
+  'contact@mockpublisher.com'
+);
+
+COMMIT;
+
+
 commit;
 
 

@@ -1,200 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Library Dashboard</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Animate.css for simple animations -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-  />
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="bg-gray-50 flex min-h-screen">
-
-  <!-- Sidebar -->
-  <aside class="w-64 bg-white shadow-lg">
-    <div class="p-6">
-      <h1 class="text-2xl font-bold">Library</h1>
-    </div>
-    <nav class="px-4 space-y-1">
-      <button data-page="dashboard" class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100 bg-gray-100 font-medium">
-        Dashboard
-      </button>
-      <button data-page="books" class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100">
-        Books
-      </button>
-      <button data-page="members" class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100">
-        Members
-      </button>
-      <button data-page="transactions" class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100">
-        Transactions
-      </button>
-      <button data-page="reports" class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100">
-        Reports
-      </button>
-      <button data-page="settings" class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100">
-        Settings
-      </button>
-    </nav>
-  </aside>
-
-  <!-- Main Content -->
-  <main class="flex-1 p-6">
-
-    <!-- Dashboard Page -->
-    <section id="dashboard" class="page-section">
-      <!-- Header -->
-      <div class="flex justify-between items-center mb-6">
-        <input
-          type="text"
-          placeholder="Search books or members..."
-          class="border rounded-lg px-4 py-2 w-1/3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-        <button class="border rounded-lg px-4 py-2">Notifications</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-gray-50 flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg">
+      <div class="p-6">
+        <h1 class="text-2xl font-bold">Library</h1>
       </div>
+      <nav class="px-4 space-y-1">
+        <button
+          data-page="dashboard"
+          class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100 bg-gray-100 font-medium"
+        >
+          Dashboard
+        </button>
+        <button
+          data-page="books"
+          class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100"
+        >
+          Books
+        </button>
+        <button
+          data-page="members"
+          class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100"
+        >
+          Members
+        </button>
+        <button
+          data-page="transactions"
+          class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100"
+        >
+          Transactions
+        </button>
+        <button
+          data-page="reports"
+          class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100"
+        >
+          Reports
+        </button>
+        <button
+          data-page="settings"
+          class="page-btn w-full text-left py-2 px-3 rounded hover:bg-gray-100"
+        >
+          Settings
+        </button>
+      </nav>
+    </aside>
 
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-4 rounded-2xl shadow-md animate_animated animatefadeInUp animate_delay-1s">
-          <h2 class="text-lg font-medium">Total Books</h2>
-          <p class="text-3xl font-bold">12,500</p>
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <!-- Books Page -->
+      <section id="books" class="page-section hidden">
+        <div class="flex justify-between items-center mb-6">
+          <input
+            id="bookSearch"
+            type="text"
+            placeholder="Search books..."
+            class="border rounded-lg px-4 py-2 w-1/3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button
+            id="addBookBtn"
+            class="bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700"
+          >
+            Add Book
+          </button>
         </div>
-        <div class="bg-white p-4 rounded-2xl shadow-md animate_animated animatefadeInUp animate_delay-2s">
-          <h2 class="text-lg font-medium">Total Members</h2>
-          <p class="text-3xl font-bold">880</p>
-        </div>
-        <div class="bg-white p-4 rounded-2xl shadow-md animate_animated animatefadeInUp animate_delay-3s">
-          <h2 class="text-lg font-medium">Issued Today</h2>
-          <p class="text-3xl font-bold">56</p>
-        </div>
-      </div>
-
-      <!-- Charts and Table -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Bar Chart -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-md p-4">
-          <h3 class="text-xl font-semibold mb-4">Books by Category</h3>
-          <canvas id="categoryChart" height="300"></canvas>
-        </div>
-
-        <!-- Recent Transactions -->
-        <div class="bg-white rounded-2xl shadow-md p-4">
-          <h3 class="text-xl font-semibold mb-4">Recent Transactions</h3>
+        <div class="bg-white rounded-2xl shadow-md p-4 overflow-x-auto">
           <table class="w-full text-left">
             <thead>
               <tr>
-                <th class="py-2">Member</th>
-                <th class="py-2">Book</th>
-                <th class="py-2">Date</th>
-                <th class="py-2">Status</th>
+                <th class="py-2">ID</th>
+                <th class="py-2">Title</th>
+                <th class="py-2">ISBN</th>
+                <th class="py-2">Year</th>
+                <th class="py-2">Publisher</th>
               </tr>
             </thead>
-            <tbody>
-              <tr class="bg-gray-50">
-                <td class="py-2">Alice</td>
-                <td class="py-2">Physics Fundamentals</td>
-                <td class="py-2">2025-04-16</td>
-                <td class="py-2">
-                  <span class="px-2 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Returned</span>
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2">Bob</td>
-                <td class="py-2">Modern Art</td>
-                <td class="py-2">2025-04-16</td>
-                <td class="py-2">
-                  <span class="px-2 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">Borrowed</span>
-                </td>
-              </tr>
-              <tr class="bg-gray-50">
-                <td class="py-2">Charlie</td>
-                <td class="py-2">AI Revolution</td>
-                <td class="py-2">2025-04-15</td>
-                <td class="py-2">
-                  <span class="px-2 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">Overdue</span>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="booksTableBody"></tbody>
           </table>
         </div>
-      </div>
-    </section>
 
-    <!-- Books Page -->
-    <section id="books" class="page-section hidden">
-      <h2 class="text-2xl font-semibold mb-4">Books Management</h2>
-      <p>Here you can add, edit, or remove books.</p>
-    </section>
+        <!-- Add Book Modal -->
+        <div
+          id="addBookModal"
+          class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden"
+        >
+          <div class="bg-white rounded-2xl w-96 p-6">
+            <h3 class="text-xl font-semibold mb-4">Add New Book</h3>
+            <form id="addBookForm" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  required
+                  class="border rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">ISBN</label>
+                <input
+                  type="text"
+                  name="isbn"
+                  required
+                  class="border rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Year Published</label>
+                <input
+                  type="number"
+                  name="year_published"
+                  required
+                  class="border rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Publisher</label>
+                <select
+                  id="publisherSelect"
+                  name="publisher_id"
+                  required
+                  class="w-full border px-3 py-2 rounded"
+                >
+                  <option value="">Loading publishers...</option>
+                </select>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  id="cancelAddBook"
+                  class="px-4 py-2 rounded-lg border hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+                >
+                  Add Book
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
 
-    <!-- Members Page -->
-    <section id="members" class="page-section hidden">
-      <h2 class="text-2xl font-semibold mb-4">Members Management</h2>
-      <p>Here you can register new members or update existing ones.</p>
-    </section>
+    <script>
+      // Sidebar navigation
+      document.querySelectorAll(".page-btn").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".page-btn")
+            .forEach((b) => b.classList.remove("bg-gray-100", "font-medium"));
+          btn.classList.add("bg-gray-100", "font-medium");
+          document
+            .querySelectorAll(".page-section")
+            .forEach((sec) => sec.classList.add("hidden"));
+          document
+            .getElementById(btn.getAttribute("data-page"))
+            .classList.remove("hidden");
+        })
+      );
 
-    <!-- Transactions Page -->
-    <section id="transactions" class="page-section hidden">
-      <h2 class="text-2xl font-semibold mb-4">Transactions</h2>
-      <p>View and manage borrowing/returning records here.</p>
-    </section>
-
-    <!-- Reports Page -->
-    <section id="reports" class="page-section hidden">
-      <h2 class="text-2xl font-semibold mb-4">Reports</h2>
-      <p>Generate and download library usage reports.</p>
-    </section>
-
-    <!-- Settings Page -->
-    <section id="settings" class="page-section hidden">
-      <h2 class="text-2xl font-semibold mb-4">Settings</h2>
-      <p>Configure system preferences and access controls.</p>
-    </section>
-
-  </main>
-
-  <!-- Page‑Switching & Chart Scripts -->
-  <script>
-    // Sidebar navigation logic
-    document.querySelectorAll('.page-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        // Highlight active button
-        document.querySelectorAll('.page-btn').forEach(b => {
-          b.classList.remove('bg-gray-100', 'font-medium');
+      // Render books
+      function renderRows(rows) {
+        const tbody = document.getElementById("booksTableBody");
+        tbody.innerHTML = "";
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="py-2">${r.BOOK_ID}</td>
+            <td class="py-2">${r.TITLE}</td>
+            <td class="py-2">${r.ISBN}</td>
+            <td class="py-2">${r.YEAR_PUBLISHED}</td>
+            <td class="py-2">${r.PUBLISHER_ID}</td>
+          `;
+          tbody.appendChild(tr);
         });
-        btn.classList.add('bg-gray-100', 'font-medium');
+      }
 
-        // Show corresponding section
-        const target = btn.getAttribute('data-page');
-        document.querySelectorAll('.page-section').forEach(sec => {
-          sec.classList.add('hidden');
-        });
-        document.getElementById(target).classList.remove('hidden');
-      });
-    });
-
-    // Chart.js initialization
-    window.addEventListener('DOMContentLoaded', () => {
-      const ctx = document.getElementById('categoryChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Science', 'Arts', 'Technology', 'Literature', 'History'],
-          datasets: [{
-            label: 'Books',
-            data: [400, 300, 200, 278, 189],
-            /* you can customize colors here if desired */
-          }],
-        },
-        options: {
-          scales: { y: { beginAtZero: true } }
+      // Fetch publishers
+      async function fetchPublishers() {
+        try {
+          const res = await fetch("/api/publishers");
+          const data = await res.json();
+          const select = document.getElementById("publisherSelect");
+          select.innerHTML = '<option value="">Select Publisher</option>';
+          data.forEach((pub) => {
+            const opt = document.createElement("option");
+            opt.value = pub.PUBLISHER_ID; // 🔁 Use uppercase keys
+            opt.textContent = pub.NAME; // 🔁 Use uppercase keys
+            select.appendChild(opt);
+          });
+        } catch (err) {
+          console.error("Error loading publishers:", err);
+          const select = document.getElementById("publisherSelect");
+          select.innerHTML = '<option value="">Failed to load</option>';
         }
+      }
+
+      // Fetch all books
+      async function fetchAll() {
+        const res = await fetch("/api/books");
+        const data = await res.json();
+        renderRows(data);
+      }
+
+      // Search
+      document
+        .getElementById("bookSearch")
+        .addEventListener("input", async (e) => {
+          const q = e.target.value;
+          if (!q) return fetchAll();
+          const res = await fetch(`/api/books?q=${encodeURIComponent(q)}`);
+          const data = await res.json();
+          if (data.length === 0) {
+            alert("No matching books found");
+            return;
+          }
+          renderRows(data);
+        });
+
+      // Modal logic
+      const addModal = document.getElementById("addBookModal");
+
+      // ✅ Fixed unified listener
+      document.getElementById("addBookBtn").addEventListener("click", () => {
+        fetchPublishers(); // Load publishers before showing modal
+        addModal.classList.remove("hidden");
       });
-    });
-  </script>
-</body>
+
+      document.getElementById("cancelAddBook").addEventListener("click", () => {
+        addModal.classList.add("hidden");
+      });
+
+      // Submit new book
+      document
+        .getElementById("addBookForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const payload = Object.fromEntries(new FormData(e.target).entries());
+          const res = await fetch("/api/books", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            const msg = err.message.includes("ORA-02291")
+              ? "Invalid publisher selected."
+              : err.message;
+            alert("Error: " + msg);
+            return;
+          }
+          addModal.classList.add("hidden");
+          e.target.reset();
+          fetchAll();
+        });
+
+      // Initial load
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchPublishers();
+        fetchAll();
+      });
+    </script>
+  </body>
 </html>
