@@ -61,6 +61,98 @@
 
     <!-- Main Content -->
     <main class="flex-1 p-6">
+      <section id="dashboard" class="page-section">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+          <input
+            type="text"
+            placeholder="Search books or members..."
+            class="border rounded-lg px-4 py-2 w-1/3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button class="border rounded-lg px-4 py-2">Notifications</button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <div
+            class="bg-white p-4 rounded-2xl shadow-md animate_animated animatefadeInUp animate_delay-1s"
+          >
+            <h2 class="text-lg font-medium">Total Books</h2>
+            <p class="text-3xl font-bold">12,500</p>
+          </div>
+          <div
+            class="bg-white p-4 rounded-2xl shadow-md animate_animated animatefadeInUp animate_delay-2s"
+          >
+            <h2 class="text-lg font-medium">Total Members</h2>
+            <p class="text-3xl font-bold">880</p>
+          </div>
+          <div
+            class="bg-white p-4 rounded-2xl shadow-md animate_animated animatefadeInUp animate_delay-3s"
+          >
+            <h2 class="text-lg font-medium">Issued Today</h2>
+            <p class="text-3xl font-bold">56</p>
+          </div>
+        </div>
+
+        <!-- Charts and Table -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Bar Chart -->
+          <div class="lg:col-span-2 bg-white rounded-2xl shadow-md p-4">
+            <h3 class="text-xl font-semibold mb-4">Books by Category</h3>
+            <canvas id="categoryChart" height="300"></canvas>
+          </div>
+
+          <!-- Recent Transactions -->
+          <div class="bg-white rounded-2xl shadow-md p-4">
+            <h3 class="text-xl font-semibold mb-4">Recent Transactions</h3>
+            <table class="w-full text-left">
+              <thead>
+                <tr>
+                  <th class="py-2">Member</th>
+                  <th class="py-2">Book</th>
+                  <th class="py-2">Date</th>
+                  <th class="py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="bg-gray-50">
+                  <td class="py-2">Alice</td>
+                  <td class="py-2">Physics Fundamentals</td>
+                  <td class="py-2">2025-04-16</td>
+                  <td class="py-2">
+                    <span
+                      class="px-2 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                      >Returned</span
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td class="py-2">Bob</td>
+                  <td class="py-2">Modern Art</td>
+                  <td class="py-2">2025-04-16</td>
+                  <td class="py-2">
+                    <span
+                      class="px-2 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                      >Borrowed</span
+                    >
+                  </td>
+                </tr>
+                <tr class="bg-gray-50">
+                  <td class="py-2">Charlie</td>
+                  <td class="py-2">AI Revolution</td>
+                  <td class="py-2">2025-04-15</td>
+                  <td class="py-2">
+                    <span
+                      class="px-2 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
+                      >Overdue</span
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
       <!-- Books Page -->
       <section id="books" class="page-section hidden">
         <!-- Books Search and Add -->
@@ -388,61 +480,61 @@
     <script>
       // Sidebar Navigation
       document.querySelectorAll(".page-btn").forEach((btn) =>
-      btn.addEventListener("click", () => {
-        document
-        .querySelectorAll(".page-btn")
-        .forEach((b) => b.classList.remove("bg-gray-100", "font-medium"));
-        btn.classList.add("bg-gray-100", "font-medium");
-        document
-        .querySelectorAll(".page-section")
-        .forEach((sec) => sec.classList.add("hidden"));
-        document
-        .getElementById(btn.getAttribute("data-page"))
-        .classList.remove("hidden");
-      })
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".page-btn")
+            .forEach((b) => b.classList.remove("bg-gray-100", "font-medium"));
+          btn.classList.add("bg-gray-100", "font-medium");
+          document
+            .querySelectorAll(".page-section")
+            .forEach((sec) => sec.classList.add("hidden"));
+          document
+            .getElementById(btn.getAttribute("data-page"))
+            .classList.remove("hidden");
+        })
       );
 
       // Fetch and Render Data
       async function fetchAll() {
-      const res = await fetch("/api/books");
-      const data = await res.json();
-      renderRows(data, "booksTableBody", renderBookRow);
+        const res = await fetch("/api/books");
+        const data = await res.json();
+        renderRows(data, "booksTableBody", renderBookRow);
       }
 
       async function fetchMembers() {
-      const res = await fetch("/api/members");
-      const data = await res.json();
-      renderRows(data, "membersTableBody", renderMemberRow);
+        const res = await fetch("/api/members");
+        const data = await res.json();
+        renderRows(data, "membersTableBody", renderMemberRow);
       }
 
       async function fetchLoans() {
-      const res = await fetch("/api/loans");
-      const data = await res.json();
-      renderRows(data, "loansTableBody", renderLoanRow);
+        const res = await fetch("/api/loans");
+        const data = await res.json();
+        renderRows(data, "loansTableBody", renderLoanRow);
       }
 
       // Render Rows
       function renderRows(rows, tableBodyId, renderRowFn) {
-      const tbody = document.getElementById(tableBodyId);
-      tbody.innerHTML = "";
-      rows.forEach((row) => tbody.appendChild(renderRowFn(row)));
+        const tbody = document.getElementById(tableBodyId);
+        tbody.innerHTML = "";
+        rows.forEach((row) => tbody.appendChild(renderRowFn(row)));
       }
 
       function renderBookRow(row) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
         <td class="py-2">${row.BOOK_ID}</td>
         <td class="py-2">${row.TITLE}</td>
         <td class="py-2">${row.ISBN}</td>
         <td class="py-2">${row.YEAR_PUBLISHED}</td>
         <td class="py-2">${row.PUBLISHER_ID}</td>
       `;
-      return tr;
+        return tr;
       }
 
       function renderMemberRow(row) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
         <td class="py-2">${row.MEMBER_ID}</td>
         <td class="py-2">${row.USER_ID}</td>
         <td class="py-2">${row.MEMBERSHIP_START_DATE}</td>
@@ -451,12 +543,12 @@
         <td class="py-2">${row.CAN_BORROW ? "Yes" : "No"}</td>
         <td class="py-2">${row.MEMBER_TYPE}</td>
       `;
-      return tr;
+        return tr;
       }
 
       function renderLoanRow(row) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
         <td class="py-2">${row.LOAN_ID}</td>
         <td class="py-2">${row.MEMBER_ID}</td>
         <td class="py-2">${row.BOOK_ID}</td>
@@ -465,51 +557,51 @@
         <td class="py-2">${row.RETURN_DATE || ""}</td>
         <td class="py-2">${row.FINE}</td>
       `;
-      return tr;
+        return tr;
       }
 
       // Modal Event Listeners
       function setupModalHandlers() {
-      setupModal("addBookBtn", "addBookModal", "cancelAddBook");
-      setupModal("addMemberBtn", "addMemberModal", "cancelAddMember");
-      setupModal("addLoanBtn", "addLoanModal", "cancelAddLoan");
+        setupModal("addBookBtn", "addBookModal", "cancelAddBook");
+        setupModal("addMemberBtn", "addMemberModal", "cancelAddMember");
+        setupModal("addLoanBtn", "addLoanModal", "cancelAddLoan");
       }
 
       function setupModal(openBtnId, modalId, closeBtnId) {
-      document.getElementById(openBtnId).addEventListener("click", () => {
-        document.getElementById(modalId).classList.remove("hidden");
-      });
-      document.getElementById(closeBtnId).addEventListener("click", () => {
-        document.getElementById(modalId).classList.add("hidden");
-      });
+        document.getElementById(openBtnId).addEventListener("click", () => {
+          document.getElementById(modalId).classList.remove("hidden");
+        });
+        document.getElementById(closeBtnId).addEventListener("click", () => {
+          document.getElementById(modalId).classList.add("hidden");
+        });
       }
 
       // Add Loan Form Submission
       document
-      .getElementById("addLoanForm")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const payload = Object.fromEntries(new FormData(e.target));
-        const res = await fetch("/api/loans", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        .getElementById("addLoanForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const payload = Object.fromEntries(new FormData(e.target));
+          const res = await fetch("/api/loans", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) {
+            e.target.reset();
+            document.getElementById("addLoanModal").classList.add("hidden");
+            fetchLoans();
+          } else {
+            console.error("Loan add failed:", await res.text());
+          }
         });
-        if (res.ok) {
-        e.target.reset();
-        document.getElementById("addLoanModal").classList.add("hidden");
-        fetchLoans();
-        } else {
-        console.error("Loan add failed:", await res.text());
-        }
-      });
 
       // Initialize Data on Page Load
       document.addEventListener("DOMContentLoaded", () => {
-      fetchAll();
-      fetchMembers();
-      fetchLoans();
-      setupModalHandlers();
+        fetchAll();
+        fetchMembers();
+        fetchLoans();
+        setupModalHandlers();
       });
     </script>
   </body>
