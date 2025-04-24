@@ -1,100 +1,92 @@
 const express = require('express');
+const { oracledb } = require('../config/db');
 const router = express.Router();
-const db = require('../config/db'); // Assuming you have a db.js file that exports the database connection
 
-// Route to get all members
+// GET /api/members - Fetch all members
 router.get('/', async (req, res) => {
+  let conn;
   try {
-    const result = await db.query('SELECT * FROM members');
+    conn = await oracledb.getConnection();
+    const result = await conn.execute(
+      `SELECT member_id, user_id, TO_CHAR(membership_start_date, 'YYYY-MM-DD') AS membership_start_date,
+              TO_CHAR(membership_end_date, 'YYYY-MM-DD') AS membership_end_date,
+              current_loan_count, can_borrow, member_type
+       FROM members
+       ORDER BY member_id`,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
     res.json(result.rows);
   } catch (err) {
-    console.error('Error fetching members:', err);
-    res.status(500).json({ message: 'Error fetching members' });
+    console.error('GET /api/members error:', err);
+    res.status(500).json({ message: err.message });
+  } finally {
+    if (conn) await conn.close();
   }
 });
 
-// Route to search members by a query
+// GET /api/members/search?q=
 router.get('/search', async (req, res) => {
-  const searchTerm = req.query.q;
-  if (!searchTerm) {
-    return res.status(400).json({ message: 'Search term is required' });
-  }
+  let conn;
+  const { q } = req.query;
+  const search = q ? `%${q.toLowerCase()}%` : '%';
+
   try {
-    const result = await db.query(
-      'SELECT * FROM members WHERE user_id::text LIKE $1 OR member_type LIKE $1',
-      [`%${searchTerm}%`]
+    conn = await oracledb.getConnection();
+    const result = await conn.execute(
+      `SELECT member_id, user_id,
+              TO_CHAR(membership_start_date, 'YYYY-MM-DD') AS membership_start_date,
+              TO_CHAR(membership_end_date, 'YYYY-MM-DD') AS membership_end_date,
+              current_loan_count, can_borrow, member_type
+       FROM members
+       WHERE LOWER(member_type) LIKE :search
+          OR TO_CHAR(user_id) LIKE :search
+       ORDER BY member_id`,
+      { search },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
     res.json(result.rows);
   } catch (err) {
-    console.error('Error searching members:', err);
-    res.status(500).json({ message: 'Error searching members' });
+    console.error('GET /api/members/search error:', err);
+    res.status(500).json({ message: err.message });
+  } finally {
+    if (conn) await conn.close();
   }
 });
 
-// Route to add a new member
+// POST /api/members - Add new member
 router.post('/', async (req, res) => {
-  const { user_id, membership_start_date, membership_end_date, current_loan_count, can_borrow, member_type } = req.body;
-
-  if (!user_id || !membership_start_date || !membership_end_date || !current_loan_count || can_borrow === undefined || !member_type) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
+  const { user_id, membership_start_date, membership_end_date, member_type } = req.body;
+  let conn;
 
   try {
-    const result = await db.query(
-      `INSERT INTO members (user_id, membership_start_date, membership_end_date, current_loan_count, can_borrow, member_type)
-      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [user_id, membership_start_date, membership_end_date, current_loan_count, can_borrow, member_type]
+    conn = await oracledb.getConnection();
+    await conn.execute(
+      `INSERT INTO members (
+         user_id,
+         membership_start_date,
+         membership_end_date,
+         member_type
+       ) VALUES (
+         :user_id,
+         TO_DATE(:start_date, 'YYYY-MM-DD'),
+         TO_DATE(:end_date, 'YYYY-MM-DD'),
+         :member_type
+       )`,
+      {
+        user_id: Number(user_id),
+        start_date: membership_start_date,
+        end_date: membership_end_date,
+        member_type
+      },
+      { autoCommit: true }
     );
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({ message: 'Member added successfully' });
   } catch (err) {
-    console.error('Error adding member:', err);
-    res.status(500).json({ message: 'Error adding member' });
-  }
-});
-
-// Route to update a member
-router.put('/:id', async (req, res) => {
-  const { id } = req.params;
-  const { user_id, membership_start_date, membership_end_date, current_loan_count, can_borrow, member_type } = req.body;
-
-  if (!user_id || !membership_start_date || !membership_end_date || !current_loan_count || can_borrow === undefined || !member_type) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
-  try {
-    const result = await db.query(
-      `UPDATE members
-      SET user_id = $1, membership_start_date = $2, membership_end_date = $3, current_loan_count = $4, can_borrow = $5, member_type = $6
-      WHERE member_id = $7 RETURNING *`,
-      [user_id, membership_start_date, membership_end_date, current_loan_count, can_borrow, member_type, id]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Member not found' });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error updating member:', err);
-    res.status(500).json({ message: 'Error updating member' });
-  }
-});
-
-// Route to delete a member
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await db.query('DELETE FROM members WHERE member_id = $1 RETURNING *', [id]);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Member not found' });
-    }
-
-    res.json({ message: 'Member deleted successfully' });
-  } catch (err) {
-    console.error('Error deleting member:', err);
-    res.status(500).json({ message: 'Error deleting member' });
+    console.error('POST /api/members error:', err);
+    res.status(400).json({ message: err.message });
+  } finally {
+    if (conn) await conn.close();
   }
 });
 

@@ -20,8 +20,28 @@ const initPool = async () => {
   }
 };
 
-function getConnection() {
-  return pool.getConnection();
-}
+// 🔥 Add this:
+const execute = async (query, params = {}, options = {}) => {
+  let connection;
+  try {
+    connection = await oracledb.getConnection();
+    const result = await connection.execute(query, params, {
+      ...options,
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
+    return result;
+  } catch (err) {
+    console.error("DB execution error:", err);
+    throw err;
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error("Error closing connection:", err);
+      }
+    }
+  }
+};
 
-module.exports = { oracledb, initPool,getConnection };
+module.exports = { oracledb, initPool, execute };
