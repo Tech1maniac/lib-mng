@@ -28,7 +28,7 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
       .card h3 {
-        margin: 0;
+        margin: 0 0 10px;
       }
       .btn {
         display: inline-block;
@@ -42,6 +42,13 @@
       .btn:hover {
         background-color: #005bb5;
       }
+      #borrowedBooksList li {
+        margin-bottom: 8px;
+      }
+      #borrowedBooksList .due-soon {
+        color: #d9534f;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -51,7 +58,9 @@
     <div class="container">
       <div class="card">
         <h3>Borrowed Books</h3>
-        <ul id="borrowedBooksList"></ul>
+        <ul id="borrowedBooksList">
+          <li>Loading your loans…</li>
+        </ul>
       </div>
       <div class="card">
         <h3>Available Actions</h3>
@@ -62,33 +71,66 @@
     </div>
 
     <script>
-      // Sample data for borrowed books
-      const borrowedBooks = [
-        { title: "The Great Gatsby", dueDate: "2023-10-15" },
-        { title: "1984", dueDate: "2023-10-20" },
-        { title: "To Kill a Mockingbird", dueDate: "2023-10-25" },
-      ];
+      document.addEventListener('DOMContentLoaded', loadBorrowedBooks);
 
-      // Populate borrowed books list
-      const borrowedBooksList = document.getElementById("borrowedBooksList");
-      borrowedBooks.forEach((book) => {
-        const li = document.createElement("li");
-        li.textContent = `${book.title} - Due: ${book.dueDate}`;
-        borrowedBooksList.appendChild(li);
-      });
+      async function loadBorrowedBooks() {
+        const listEl = document.getElementById('borrowedBooksList');
+        listEl.innerHTML = '<li>Loading your loans…</li>';
 
-      // Action functions
+        try {
+          const res = await fetch('/api/members/borrowed', {
+            method: 'GET',
+            credentials: 'include'  // send the user_id cookie
+          });
+
+          if (!res.ok) {
+            throw new Error(`Error: ${res.status} ${res.statusText}`);
+          }
+
+          const loans = await res.json();
+
+          // Filter to only active loans (not yet returned)
+          const active = loans.filter(l => !l.return_date);
+
+          if (active.length === 0) {
+            listEl.innerHTML = '<li>You have no borrowed books at the moment.</li>';
+            return;
+          }
+
+          // Clear and populate
+          listEl.innerHTML = '';
+          active.forEach(l => {
+            const due = new Date(l.due_date);
+            const today = new Date();
+            const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+            const li = document.createElement('li');
+            li.textContent = `${l.title} — due ${due.toLocaleDateString()}`;
+
+            // highlight if due within 3 days
+            if (daysLeft <= 3) {
+              li.classList.add('due-soon');
+            }
+
+            listEl.appendChild(li);
+          });
+        } catch (err) {
+          console.error(err);
+          listEl.innerHTML = `<li class="due-soon">Failed to load your loans. Please try again later.</li>`;
+        }
+      }
+
       function viewProfile() {
-        alert("Redirecting to profile page...");
+        window.location.href = '/profile';
       }
 
       function searchBooks() {
-        alert("Redirecting to book search page...");
+        window.location.href = '/books';
       }
 
       function logout() {
-        if (confirm("Are you sure you want to logout?")) {
-          window.location.href = "/login";
+        if (confirm('Are you sure you want to logout?')) {
+          window.location.href = '/login';
         }
       }
     </script>

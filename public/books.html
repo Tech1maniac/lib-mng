@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Search Books</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin:0; padding:20px; }
+    h1 { color: #0073e6; }
+    #searchInput {
+      width: 100%; padding: 10px; margin: 20px 0; box-sizing: border-box;
+      border: 1px solid #ccc; border-radius: 4px;
+    }
+    .book-card {
+      background: white; padding: 15px; margin-bottom: 10px;
+      border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .book-card h2 { margin: 0 0 5px; font-size: 1.1em; }
+    .book-meta { font-size: 0.9em; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Available Books</h1>
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Search by title (partial matches allowed)…"
+  />
+  <div id="booksList">Loading books…</div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const input = document.getElementById("searchInput");
+      input.addEventListener("input", () => loadBooks(input.value.trim()));
+      loadBooks(""); // initial load: all books
+    });
+
+    async function loadBooks(query) {
+      const container = document.getElementById("booksList");
+      container.innerHTML = "Loading books…";
+
+      try {
+        // Fetch all or filtered
+        const url = query
+          ? `/api/books?q=${encodeURIComponent(query)}`
+          : "/api/books";
+        const res = await fetch(url, { credentials: "include" });
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const books = await res.json();
+
+        // If searching, only show first 5 matches
+        const toShow = query ? books.slice(0, 5) : books;
+
+        if (toShow.length === 0) {
+          container.innerHTML = "<p>No books found.</p>";
+          return;
+        }
+
+        // Render
+        container.innerHTML = "";
+        toShow.forEach(b => {
+          const card = document.createElement("div");
+          card.className = "book-card";
+          card.innerHTML = `
+            <h2>${b.TITLE}</h2>
+            <div class="book-meta">
+              ISBN: ${b.ISBN}<br>
+              Year: ${b.YEAR_PUBLISHED}<br>
+              Publisher ID: ${b.PUBLISHER_ID}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p>Error loading books. Try again later.</p>";
+      }
+    }
+  </script>
+</body>
+</html>

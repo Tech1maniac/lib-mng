@@ -26,7 +26,9 @@ router.post("/register", async (req, res) => {
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
     if (existing.rows.length > 0) {
-      return res.status(400).json({ message: "User already exists. Please login instead." });
+      return res
+        .status(400)
+        .json({ message: "User already exists. Please login instead." });
     }
 
     // Hash password and insert new user
@@ -40,15 +42,22 @@ router.post("/register", async (req, res) => {
       email,
       password: hashedPassword,
       name: name || null,
-      userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+      userId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
     };
-    const result = await connection.execute(insertUserSql, bindVars, { autoCommit: true });
+    const result = await connection.execute(insertUserSql, bindVars, {
+      autoCommit: true,
+    });
     const userId = result.outBinds.userId[0];
 
-    res.json({ message: "Registration successful. Please login to continue.", userId });
+    res.json({
+      message: "Registration successful. Please login to continue.",
+      userId,
+    });
   } catch (err) {
     console.error("Error in /register route:", err);
-    res.status(500).json({ message: "An error occurred during the registration process." });
+    res
+      .status(500)
+      .json({ message: "An error occurred during the registration process." });
   } finally {
     if (connection) await connection.close();
   }
@@ -73,7 +82,9 @@ router.post("/login", async (req, res) => {
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: "User not found. Please register first." });
+      return res
+        .status(404)
+        .json({ message: "User not found. Please register first." });
     }
 
     const user = result.rows[0];
@@ -88,13 +99,22 @@ router.post("/login", async (req, res) => {
       INSERT INTO EMAIL_VERIFICATIONS (user_id, verification_code)
       VALUES (:userId, :otp)
     `;
-    await connection.execute(insertOtpSql, { userId, otp }, { autoCommit: true });
+    await connection.execute(
+      insertOtpSql,
+      { userId, otp },
+      { autoCommit: true }
+    );
 
     await sendOTPEmail(email, otp);
-    res.json({ message: "OTP sent to email. Please enter the OTP to complete login.", email });
+    res.json({
+      message: "OTP sent to email. Please enter the OTP to complete login.",
+      email,
+    });
   } catch (err) {
     console.error("Error in /login route:", err);
-    res.status(500).json({ message: "An error occurred during the login process." });
+    res
+      .status(500)
+      .json({ message: "An error occurred during the login process." });
   } finally {
     if (connection) await connection.close();
   }
@@ -118,7 +138,9 @@ router.post("/verify-otp", async (req, res) => {
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
     if (userRes.rows.length === 0) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
     }
 
     const { USER_ID, ROLE } = userRes.rows[0];
@@ -135,7 +157,12 @@ router.post("/verify-otp", async (req, res) => {
       { outFormat: oracledb.OUT_FORMAT_OBJECT }
     );
     if (otpRes.rows.length === 0) {
-      return res.status(401).json({ success: false, message: "No OTP found. Please try logging in again." });
+      return res
+        .status(401)
+        .json({
+          success: false,
+          message: "No OTP found. Please try logging in again.",
+        });
     }
 
     const { VERIFICATION_CODE, CREATION_DATE } = otpRes.rows[0];
@@ -143,20 +170,52 @@ router.post("/verify-otp", async (req, res) => {
     const creationDate = new Date(CREATION_DATE);
     const diffMins = (now - creationDate) / 1000 / 60;
     if (diffMins > 5) {
-      return res.status(401).json({ success: false, message: "OTP has expired. Please login again to receive a new OTP." });
+      return res
+        .status(401)
+        .json({
+          success: false,
+          message: "OTP has expired. Please login again to receive a new OTP.",
+        });
     }
     if (VERIFICATION_CODE !== otp) {
-      return res.status(401).json({ success: false, message: "Invalid OTP. Please try again." });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid OTP. Please try again." });
     }
 
-    const redirectUrl = ROLE.toLowerCase() === "admin" ? "/admin-dashboard" : "/member-dashboard";
-    res.json({ success: true, message: "OTP verified successfully.", redirectUrl });
+    req.session.userId = USER_ID;
+    req.session.role = ROLE;
+
+    const redirectUrl =
+      ROLE.toLowerCase() === "admin" ? "/admin-dashboard" : "/member-dashboard";
+    res.json({
+      success: true,
+      message: "OTP verified successfully.",
+      redirectUrl,
+    });
   } catch (err) {
     console.error("Error in /verify-otp route:", err);
-    res.status(500).json({ success: false, message: "An error occurred during OTP verification." });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "An error occurred during OTP verification.",
+      });
   } finally {
     if (connection) await connection.close();
   }
+});
+
+router.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ message: "Logout failed." });
+    }
+    // clear the default session cookie
+    res.clearCookie("connect.sid");
+    res.json({ message: "Logged out." });
+  });
 });
 
 module.exports = router;
