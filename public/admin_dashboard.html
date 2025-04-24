@@ -703,6 +703,25 @@
             console.error("Loan add failed:", await res.text());
           }
         });
+      window.addEventListener("DOMContentLoaded", () => {
+        const ctx = document.getElementById("categoryChart").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Science", "Arts", "Technology", "Literature", "History"],
+            datasets: [
+              {
+                label: "Books",
+                data: [400, 300, 200, 278, 189],
+                /* you can customize colors here if desired */
+              },
+            ],
+          },
+          options: {
+            scales: { y: { beginAtZero: true } },
+          },
+        });
+      });
 
       document.addEventListener("DOMContentLoaded", () => {
         fetchPublishers();
