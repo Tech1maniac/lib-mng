@@ -1,10 +1,10 @@
 // routes/books.js
-const express = require('express');
-const { oracledb } = require('../config/db');
+const express = require("express");
+const { oracledb } = require("../config/db");
 const router = express.Router();
 
 // GET all books or search by title (partial, case-insensitive, top 5)
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   let conn;
   try {
     conn = await oracledb.getConnection();
@@ -40,25 +40,25 @@ router.get('/', async (req, res) => {
       binds = {};
     }
 
-    const result = await conn.execute(
-      sql,
-      binds,
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    );
+    const result = await conn.execute(sql, binds, {
+      outFormat: oracledb.OUT_FORMAT_OBJECT,
+    });
 
     res.json(result.rows);
   } catch (err) {
-    console.error('GET /api/books error:', err);
+    console.error("GET /api/books error:", err);
     res.status(500).json({ message: err.message });
   } finally {
     if (conn) {
-      try { await conn.close(); } catch (_) {}
+      try {
+        await conn.close();
+      } catch (_) {}
     }
   }
 });
 
 // POST a new book
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const { title, isbn, year_published, publisher_id } = req.body;
   let conn;
   try {
@@ -70,17 +70,48 @@ router.post('/', async (req, res) => {
         title,
         isbn,
         year_published: Number(year_published),
-        publisher_id: Number(publisher_id)
+        publisher_id: Number(publisher_id),
       },
       { autoCommit: true }
     );
-    res.status(201).json({ message: 'Book added' });
+    res.status(201).json({ message: "Book added" });
   } catch (err) {
-    console.error('POST /api/books error:', err);
+    console.error("POST /api/books error:", err);
     res.status(400).json({ message: err.message });
   } finally {
     if (conn) {
-      try { await conn.close(); } catch (_) {}
+      try {
+        await conn.close();
+      } catch (_) {}
+    }
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  let conn;
+  const { id } = req.params;
+
+  try {
+    conn = await oracledb.getConnection();
+    const result = await conn.execute(
+      `DELETE FROM books WHERE book_id = :id`,
+      { id: Number(id) },
+      { autoCommit: true }
+    );
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    return res.json({ message: "Book deleted" });
+  } catch (err) {
+    console.error("DELETE /api/books/:id error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    if (conn) {
+      try {
+        await conn.close();
+      } catch (_) {}
     }
   }
 });

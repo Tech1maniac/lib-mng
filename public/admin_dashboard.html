@@ -180,6 +180,7 @@
                 <th class="py-2">ISBN</th>
                 <th class="py-2">Year</th>
                 <th class="py-2">Publisher</th>
+                <th class="py-2">Actions</th>
               </tr>
             </thead>
             <tbody id="booksTableBody"></tbody>
@@ -473,6 +474,27 @@
       </section>
     </main>
 
+    <!-- Toast Container -->
+    <!-- <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+      <div
+        id="toast"
+        class="toast align-items-center text-white bg-dark border-0"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="d-flex">
+          <div class="toast-body" id="toastMsg"></div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+        </div>
+      </div>
+    </div> -->
+
     <script>
       // Sidebar navigation
       document.querySelectorAll(".page-btn").forEach((btn) =>
@@ -490,6 +512,13 @@
         })
       );
 
+      // // Toast helper
+      // function alert(message) {
+      //   document.getElementById("toastMsg").textContent = message;
+      //   new bootstrap.Toast(document.getElementById("toast")).show();
+      // }
+
+      // Render book rows (with Delete button)
       function renderRows(rows) {
         const tbody = document.getElementById("booksTableBody");
         tbody.innerHTML = "";
@@ -501,11 +530,42 @@
             <td class="py-2">${r.ISBN}</td>
             <td class="py-2">${r.YEAR_PUBLISHED}</td>
             <td class="py-2">${r.PUBLISHER_ID}</td>
+            <td class="py-2">
+              <button
+                type="button"
+                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded delete-btn"
+                data-id="${r.BOOK_ID}"
+              >Delete</button>
+            </td>
           `;
           tbody.appendChild(tr);
         });
+        attachDeleteEvents();
       }
 
+      // Wire up Delete button handlers
+      function attachDeleteEvents() {
+        document.querySelectorAll(".delete-btn").forEach((btn) => {
+          btn.addEventListener("click", async (e) => {
+            const id = e.target.dataset.id;
+            if (!confirm("Are you sure you want to delete this book?")) return;
+            try {
+              const res = await fetch(`/api/books/${id}`, { method: "DELETE" });
+              if (res.ok) {
+                alert("Book deleted");
+                fetchAll();
+              } else {
+                const err = await res.json();
+                alert(`Error: ${err.message}`);
+              }
+            } catch {
+              alert("Delete request failed");
+            }
+          });
+        });
+      }
+
+      // Fetch and populate publisher dropdown
       async function fetchPublishers() {
         try {
           const res = await fetch("/api/publishers");
@@ -520,17 +580,19 @@
           });
         } catch (err) {
           console.error("Error loading publishers:", err);
-          const select = document.getElementById("publisherSelect");
-          select.innerHTML = '<option value="">Failed to load</option>';
+          document.getElementById("publisherSelect").innerHTML =
+            '<option value="">Failed to load</option>';
         }
       }
 
+      // Fetch all books
       async function fetchAll() {
         const res = await fetch("/api/books");
         const data = await res.json();
         renderRows(data);
       }
 
+      // Search books
       document
         .getElementById("bookSearch")
         .addEventListener("input", async (e) => {
@@ -545,6 +607,7 @@
           renderRows(data);
         });
 
+      // Add Book modal show/hide & submission
       const addModal = document.getElementById("addBookModal");
 
       document.getElementById("addBookBtn").addEventListener("click", () => {
@@ -579,6 +642,7 @@
           fetchAll();
         });
 
+      // Render member rows
       function renderMemberRows(rows) {
         const tbody = document.getElementById("membersTableBody");
         tbody.innerHTML = "";
@@ -597,6 +661,7 @@
         });
       }
 
+      // Fetch members
       async function fetchMembers() {
         const res = await fetch("/api/members");
         const data = await res.json();
@@ -617,6 +682,7 @@
           renderMemberRows(data);
         });
 
+      // Add Member modal
       const memberModal = document.getElementById("addMemberModal");
 
       document.getElementById("addMemberBtn").addEventListener("click", () => {
@@ -649,7 +715,7 @@
           fetchMembers();
         });
 
-      // Fetch and render Loans
+      // Fetch & render loans
       async function fetchLoans() {
         const res = await fetch("/api/loans");
         const data = await res.json();
@@ -662,19 +728,19 @@
         rows.forEach((r) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-      <td class="py-2">${r.LOAN_ID}</td>
-      <td class="py-2">${r.MEMBER_ID}</td>
-      <td class="py-2">${r.BOOK_ID}</td>
-      <td class="py-2">${r.LOAN_DATE}</td>
-      <td class="py-2">${r.DUE_DATE}</td>
-      <td class="py-2">${r.RETURN_DATE || ""}</td>
-      <td class="py-2">${r.FINE}</td>
-    `;
+            <td class="py-2">${r.LOAN_ID}</td>
+            <td class="py-2">${r.MEMBER_ID}</td>
+            <td class="py-2">${r.BOOK_ID}</td>
+            <td class="py-2">${r.LOAN_DATE}</td>
+            <td class="py-2">${r.DUE_DATE}</td>
+            <td class="py-2">${r.RETURN_DATE || ""}</td>
+            <td class="py-2">${r.FINE}</td>
+          `;
           tbody.appendChild(tr);
         });
       }
 
-      // Modal show/hide & form submit
+      // Add Loan modal
       document
         .getElementById("addLoanBtn")
         .addEventListener("click", () =>
@@ -703,32 +769,27 @@
             console.error("Loan add failed:", await res.text());
           }
         });
+
+      // Chart initialization
       window.addEventListener("DOMContentLoaded", () => {
         const ctx = document.getElementById("categoryChart").getContext("2d");
         new Chart(ctx, {
           type: "bar",
           data: {
             labels: ["Science", "Arts", "Technology", "Literature", "History"],
-            datasets: [
-              {
-                label: "Books",
-                data: [400, 300, 200, 278, 189],
-                /* you can customize colors here if desired */
-              },
-            ],
+            datasets: [{ label: "Books", data: [400, 300, 200, 278, 189] }],
           },
-          options: {
-            scales: { y: { beginAtZero: true } },
-          },
+          options: { scales: { y: { beginAtZero: true } } },
         });
-      });
 
-      document.addEventListener("DOMContentLoaded", () => {
+        // Initial data loads
         fetchPublishers();
         fetchAll();
         fetchMembers();
-        fetchLoans(); // ← add this line
+        fetchLoans();
       });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

@@ -70,17 +70,43 @@
       </div>
     </div>
 
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+      <div
+        id="toast"
+        class="toast align-items-center text-white bg-dark border-0"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="d-flex">
+          <div class="toast-body" id="toastMsg"></div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+        </div>
+      </div>
+    </div>
+
     <script>
-      document.addEventListener('DOMContentLoaded', loadBorrowedBooks);
+      document.addEventListener("DOMContentLoaded", loadBorrowedBooks);
 
       async function loadBorrowedBooks() {
-        const listEl = document.getElementById('borrowedBooksList');
-        listEl.innerHTML = '<li>Loading your loans…</li>';
+        const listEl = document.getElementById("borrowedBooksList");
+        listEl.innerHTML = "<li>Loading your loans…</li>";
+
+        // Toast helper
+        function showToast(message) {
+          document.getElementById("toastMsg").textContent = message;
+          new bootstrap.Toast(document.getElementById("toast")).show();
+        }
 
         try {
-          const res = await fetch('/api/members/borrowed', {
-            method: 'GET',
-            credentials: 'include'  // send the user_id cookie
+          const res = await fetch("/api/members/borrowed", {
+            method: "GET",
+            credentials: "include", // send the user_id cookie
           });
 
           if (!res.ok) {
@@ -90,26 +116,27 @@
           const loans = await res.json();
 
           // Filter to only active loans (not yet returned)
-          const active = loans.filter(l => !l.return_date);
+          const active = loans.filter((l) => !l.return_date);
 
           if (active.length === 0) {
-            listEl.innerHTML = '<li>You have no borrowed books at the moment.</li>';
+            listEl.innerHTML =
+              "<li>You have no borrowed books at the moment.</li>";
             return;
           }
 
           // Clear and populate
-          listEl.innerHTML = '';
-          active.forEach(l => {
+          listEl.innerHTML = "";
+          active.forEach((l) => {
             const due = new Date(l.due_date);
             const today = new Date();
             const daysLeft = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
 
-            const li = document.createElement('li');
+            const li = document.createElement("li");
             li.textContent = `${l.title} — due ${due.toLocaleDateString()}`;
 
             // highlight if due within 3 days
             if (daysLeft <= 3) {
-              li.classList.add('due-soon');
+              li.classList.add("due-soon");
             }
 
             listEl.appendChild(li);
@@ -121,18 +148,19 @@
       }
 
       function viewProfile() {
-        window.location.href = '/profile';
+        window.location.href = "/profile";
       }
 
       function searchBooks() {
-        window.location.href = '/books';
+        window.location.href = "/books";
       }
 
       function logout() {
-        if (confirm('Are you sure you want to logout?')) {
-          window.location.href = '/login';
+        if (confirm("Are you sure you want to logout?")) {
+          window.location.href = "/login";
         }
       }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
